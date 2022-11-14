@@ -174,7 +174,11 @@ class VCF(sharder.Shardable):
         if v == '.':
             v = None
         elif d['Number'] != '0' and d['Number'] != '1':
-            v = list(map(cvt, v.split(',')))
+            v = v.split(',')
+            if all(x == '.' for x in v):
+                v = None
+            else:
+                v = list(map(cvt, v))
         elif cvt:
             v = cvt(v)
         return (k,v)
