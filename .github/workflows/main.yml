@@ -1,0 +1,33 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+    ci:
+        strategy:
+          fail-fast: true
+          matrix:
+            python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+            os: [ubuntu-22.04] #, macos-latest, windows-latest]
+        runs-on: ${{ matrix.os }}
+        steps:
+        - uses: actions/checkout@v3
+        - uses: actions/setup-python@v4
+          with:
+            python-version: ${{ matrix.python-version }}
+        - name: Test
+          run: |
+            PYTHONPATH=$(pwd) python example/filter_dp.py \
+              --input_vcf tests/hc_subset.vcf.gz \
+              --output_vcf tests/hc_subset_dp.vcf.gz
+            if [ ! -f tests/hc_subset_dp.vcf.gz ]; then  exit 1; fi
+            if [ ! -f tests/hc_subset_dp.vcf.gz.tbi ]; then   exit 1; fi
+        - name: Test csi
+          run: |
+            rm tests/hc_subset.vcf.gz.tbi
+            PYTHONPATH=$(pwd) VCF_INDEX_TYPE=2 python example/filter_dp.py \
+              --input_vcf tests/hc_subset.vcf.gz \
+              --output_vcf tests/hc_subset_dp.vcf.gz
+            if [ ! -f tests/hc_subset_dp.vcf.gz ]; then   exit 1; fi
+            if [ ! -f tests/hc_subset_dp.vcf.gz.csi ]; then   exit 1; fi
