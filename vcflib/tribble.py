@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2021 Sentieon Inc. All rights reserved
+# Copyright (c) 2014-2024 Sentieon Inc. All rights reserved
 import bisect
 import collections
 import heapq
@@ -178,10 +178,8 @@ class TribbleIndex(object):
     MAX_FEATURES_PER_BIN = 100
     MAX_FEATURES_PER_INTERVAL = 600
 
-    def __init__(self, idxf, mode='r'):
-        if not idxf.endswith('.idx'):
-            raise ValueError('File name suffix is not .idx')
-        self.path = idxf
+    def __init__(self, path, mode='r'):
+        self.path = path + '.idx'
         self.mode = mode
         if mode[0:1] == 'r':
             self.load()

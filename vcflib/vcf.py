@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2021 Sentieon Inc. All rights reserved
+# Copyright (c) 2014-2024 Sentieon Inc. All rights reserved
 import collections
 import fnmatch
 import io
@@ -63,10 +63,14 @@ class VCF(sharder.Shardable):
         self.fp, self.index = None, None
         if path.endswith('.gz'):
             self.fp = bgzf.open(path, mode)
-            self.index = tabix.Tabix(path + '.tbi', mode)
+            self.index = tabix.Tabix(path, mode)
+        elif path == '-':
+            if mode[0:1] == 'r':
+                raise RuntimeError('Input vcf cannot be stdin')
+            self.fp = os.fdopen(1, mode)
         else:
             self.fp = io.open(path, mode)
-            self.index = tribble.TribbleIndex(path + '.idx', mode)
+            self.index = tribble.TribbleIndex(path, mode)
 
     def load_header(self):
         self.headers = []
@@ -114,7 +118,6 @@ class VCF(sharder.Shardable):
         self.parse_header()
 
     def emit_header(self):
-        assert self.fp.tell() == 0
         for line in self.headers:
             if line.startswith('#CHROM'):
                 continue
@@ -125,7 +128,10 @@ class VCF(sharder.Shardable):
             cols += self.samples
         line = '\t'.join(cols)
         self.fp.write(line.encode() + b'\n')
-        self.index.add(None, 0, 0, self.fp.tell())
+        if self.index is not None:
+            maxlen = max(int(t.get('length',0))
+                for c,t in iteritems(self.contigs))
+            self.index.add(None, maxlen, 0, self.fp.tell())
 
     def parse_header(self):
         self.contigs = collections.OrderedDict()
@@ -323,7 +329,8 @@ class VCF(sharder.Shardable):
         if v.line is None:
             self.format(v)
         self.fp.write(v.line.encode() + b'\n')
-        self.index.add(v.chrom, v.pos, v.end, self.fp.tell())
+        if self.index is not None:
+            self.index.add(v.chrom, v.pos, v.end, self.fp.tell())
 
     def cmp_variants(self, v1, v2):
         v1_contig_idx = list(self.contigs.keys()).index(v1.chrom)
@@ -366,10 +373,10 @@ class VCF(sharder.Shardable):
                 if i >= 0:
                     end = int(info[i+4:].split(';',1)[0])
             self.fp.write(line)
-            self.index.add(chrom, pos, end, self.fp.tell())
+            if self.index is not None:
+                self.index.add(chrom, pos, end, self.fp.tell())
         tfp.close()
         os.unlink(tmpf)
-        os.unlink(tmpf + '.idx')
 
 class VCFReader(object):
     def __init__(self, vcf, chrom, start, end):
@@ -432,7 +439,6 @@ class VCFWriter(sharder.ShardResult):
         self.fp = tempfile.NamedTemporaryFile(mode='wb', suffix='.vcf',
             delete=False, dir=os.getenv('SENTIEON_TMPDIR'))
         self.path = self.fp.name
-        self.index = tribble.TribbleIndex(self.path + '.idx', 'w')
         self.chrom = chrom
         self.start = start
         self.end = end
@@ -441,7 +447,7 @@ class VCFWriter(sharder.ShardResult):
         return getattr(self.vcf, key)
 
     def emit_header(self):
-        self.index.add(None, 0, 0, self.fp.tell())
+        pass
 
     def emit(self, v):
         if v.chrom != self.chrom or v.pos >= self.end or v.end <= self.start:
@@ -449,11 +455,9 @@ class VCFWriter(sharder.ShardResult):
         if v.line is None:
             self.vcf.format(v)
         self.fp.write(v.line.encode() + b'\n')
-        self.index.add(v.chrom, v.pos, v.end, self.fp.tell())
 
     def close(self):
         self.fp.close()
-        self.index.save()
 
     def __getdata__(self):
         self.close()
