@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2024 Sentieon Inc. All rights reserved
+# Copyright (c) 2014-2025 Sentieon Inc. All rights reserved
 import collections
 import os
 import struct
