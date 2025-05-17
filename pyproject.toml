@@ -1,0 +1,25 @@
+[project]
+name = "vcflib"
+version = "1.0.0"
+description = "An open-source Python library for VCF parsing and manipulation"
+authors = [
+    {name = "Sentieon",email = "support@sentieon.com"}
+]
+readme = "README.md"
+requires-python = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, >=3.6"
+include = ["LICENSE"]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 2.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/Sentieon/vcflib"
+Source = "https://github.com/Sentieon/vcflib"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
