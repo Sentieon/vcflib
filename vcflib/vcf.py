@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2025 Sentieon Inc. All rights reserved
+# Copyright (c) 2014-2026 Sentieon Inc. All rights reserved
 import collections
 import fnmatch
 import io
@@ -360,20 +360,25 @@ class VCF(sharder.Shardable):
         if tmpf is None:
             return
         tfp = io.open(tmpf, 'rb')
-        for line in tfp:
-            flds = line.decode().rstrip().split('\t')
-            chrom = flds[0]
-            pos = int(flds[1])-1
-            end = pos + len(flds[3])
-            if len(flds) > 7:
-                info = flds[7]
-                i = info.find('END=')
-                while i > 0 and info[i-1] != ';':
-                    i = info.find('END=', i+4)
-                if i >= 0:
-                    end = int(info[i+4:].split(';',1)[0])
-            self.fp.write(line)
-            if self.index is not None:
+        if self.index is None:
+            buf = tfp.read(16*1024*1024)
+            while buf:
+                self.fp.write(buf)
+                buf = tfp.read(16*1024*1024)
+        else:
+            for line in tfp:
+                flds = line.decode().rstrip().split('\t')
+                chrom = flds[0]
+                pos = int(flds[1])-1
+                end = pos + len(flds[3])
+                if len(flds) > 7:
+                    info = flds[7]
+                    i = info.find('END=')
+                    while i > 0 and info[i-1] != ';':
+                        i = info.find('END=', i+4)
+                    if i >= 0:
+                        end = int(info[i+4:].split(';',1)[0])
+                self.fp.write(line)
                 self.index.add(chrom, pos, end, self.fp.tell())
         tfp.close()
         os.unlink(tmpf)

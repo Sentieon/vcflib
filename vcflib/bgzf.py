@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2025 Sentieon Inc. All rights reserved
+# Copyright (c) 2014-2026 Sentieon Inc. All rights reserved
 import io
 import struct
 import zlib
