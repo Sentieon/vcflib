@@ -1,6 +1,6 @@
 [project]
 name = "vcflib"
-version = "1.0.0"
+version = "1.0.1"
 description = "An open-source Python library for VCF parsing and manipulation"
 authors = [
     {name = "Sentieon",email = "support@sentieon.com"}
