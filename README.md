@@ -2,6 +2,13 @@
 An open-source Python library for parsing and manipulation of variant call
 format (VCF) files.
 
+## Installation
+
+Install with `pip`:
+```sh
+pip install vcflib
+```
+
 ## Highlights
 - Transparently supports reading and writing uncompressed or bgzip-compressed
   and tabix-indexed VCF files.
@@ -16,7 +23,7 @@ A simple script that filters variants with a DP < 10 from an input VCF is
 provided as an example at `example/filter_dp.py`.
 
 ```
-PYTHONPATH=$(pwd) python example/filter_dp.py --input_vcf <VCF> --output_vcf <VCF>
+python example/filter_dp.py --input_vcf <VCF> --output_vcf <VCF>
 ```
 
 ## Contributing
